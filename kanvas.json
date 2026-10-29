@@ -1,0 +1,200 @@
+{
+  "kanvas": 1,
+  "title": "climg",
+  "groups": [
+    {
+      "id": "AC",
+      "name": "Architecture & Core"
+    },
+    {
+      "id": "PR",
+      "name": "Protocols & Rendering"
+    },
+    {
+      "id": "CM",
+      "name": "CLI & Modes"
+    },
+    {
+      "id": "VR",
+      "name": "Verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "AC-01",
+      "title": "Scaffold Rust CLI and Image Loading",
+      "state": "done",
+      "group": "AC",
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Initialize Cargo project, setup CLI arguments with Clap (files, --width, --height, --max-width, --max-height, --protocol, --quiet, --watch), and implement image decoding supporting PNG, JPEG, WebP, and GIF from both file paths and stdin.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:23:39Z",
+          "by": "antigravity",
+          "text": "Plan: Initialize Cargo project, configure dependencies (clap, image, base64, etc.), create CLI arguments structure, and implement image loading from file paths and stdin."
+        },
+        {
+          "at": "2026-10-29T12:25:05Z",
+          "by": "antigravity",
+          "text": "Initialized Cargo project, configured Clap CLI arguments with sizing/protocol/watch/quiet flags, and implemented image loading with automatic format detection and STDIN support."
+        }
+      ]
+    },
+    {
+      "id": "AC-02",
+      "title": "Implement Terminal Detection & Multiplexer Passthrough",
+      "state": "done",
+      "group": "AC",
+      "deps": ["AC-01"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Detect terminal graphics capabilities via /dev/tty DA/graphics queries and environment variables (Kitty, iTerm2/WezTerm/Ghostty). Detect tmux/screen and wrap escape sequences in passthrough commands. Return clear error guidance when no supported graphics protocol is available.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:25:14Z",
+          "by": "antigravity",
+          "text": "Plan: Implement terminal emulator and protocol detection (Kitty, iTerm2/WezTerm/Ghostty) via environment and direct TTY query, along with tmux/screen multiplexer detection and escape passthrough wrapper."
+        },
+        {
+          "at": "2026-10-29T12:26:44Z",
+          "by": "antigravity",
+          "text": "Implemented terminal protocol detection (Kitty, iTerm2) with environment lookup and /dev/tty fallback, tmux/screen multiplexer detection and escape passthrough wrapping, and error reporting for unsupported terminals."
+        }
+      ]
+    },
+    {
+      "id": "PR-01",
+      "title": "Implement Kitty Graphics Protocol Encoder",
+      "state": "done",
+      "group": "PR",
+      "deps": ["AC-02"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Implement Kitty graphics protocol transmission: chunked base64 payload delivery, direct RGB/RGBA or PNG pass-through, dimension calculation, and escape formatting.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:26:53Z",
+          "by": "antigravity",
+          "text": "Plan: Implement Kitty graphics protocol encoder: chunked base64 payload delivery (4096-byte chunks), format selection (PNG passthrough or 32-bit RGBA), dimension control (columns/rows), and escape sequences."
+        },
+        {
+          "at": "2026-10-29T12:27:36Z",
+          "by": "antigravity",
+          "text": "Implemented Kitty graphics protocol encoder with 4096-byte chunked base64 transmission, PNG format passthrough, dimension control, and multiplexer wrapping support."
+        }
+      ]
+    },
+    {
+      "id": "PR-02",
+      "title": "Implement iTerm2 Inline Protocol Encoder",
+      "state": "done",
+      "group": "PR",
+      "deps": ["AC-02"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Implement iTerm2 inline images protocol: base64 payload encoding, file size and dimension parameters (width, height, preserveAspectRatio=1), and escape formatting.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:27:47Z",
+          "by": "antigravity",
+          "text": "Plan: Implement iTerm2 inline images protocol: base64 payload encoding, dimension arguments (width, height, preserveAspectRatio=1), size metadata, and OSC 1337 escape sequence generation."
+        },
+        {
+          "at": "2026-10-29T12:28:09Z",
+          "by": "antigravity",
+          "text": "Implemented iTerm2 inline images protocol encoder with OSC 1337 sequences, base64 payload encoding, dimension formatting, and multiplexer wrapping."
+        }
+      ]
+    },
+    {
+      "id": "PR-03",
+      "title": "Unified Sizing and Rendering Engine",
+      "state": "done",
+      "group": "PR",
+      "deps": ["PR-01", "PR-02"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Query current terminal window dimensions (columns and rows), calculate scaled target dimensions preserving aspect ratio, and render image buffers to terminal stdout using the selected protocol.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:28:17Z",
+          "by": "antigravity",
+          "text": "Plan: Implement terminal dimension calculation, size parsing (cols, rows, percentages), aspect ratio preservation, image format conversion to PNG when needed for Kitty, and dispatch to selected graphics protocol."
+        },
+        {
+          "at": "2026-10-29T12:28:56Z",
+          "by": "antigravity",
+          "text": "Implemented unified sizing and rendering engine with terminal window detection, aspect ratio preservation, automatic format conversion to PNG for Kitty, and protocol dispatch."
+        }
+      ]
+    },
+    {
+      "id": "CM-01",
+      "title": "Sequential Multi-Image & Metadata Banner",
+      "state": "done",
+      "group": "CM",
+      "deps": ["PR-03"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Support processing multiple image arguments sequentially. Print formatted metadata header (filename, resolution, size) above each image, suppressed with --quiet.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:29:02Z",
+          "by": "antigravity",
+          "text": "Plan: Enhance multi-image display with clean ANSI-styled metadata banners (file name in bold, dimensions, format, file size), proper spacing, and support for quiet mode."
+        },
+        {
+          "at": "2026-10-29T12:29:25Z",
+          "by": "antigravity",
+          "text": "Implemented sequential multi-image rendering with styled ANSI metadata banners, clean visual separation, and quiet mode flag handling."
+        }
+      ]
+    },
+    {
+      "id": "CM-02",
+      "title": "In-Place Live Watch Mode",
+      "state": "done",
+      "group": "CM",
+      "deps": ["PR-03"],
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Implement --watch / -W mode to monitor image file changes on disk and re-render plots in place with clear terminal cursor positioning as training scripts update them.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:29:32Z",
+          "by": "antigravity",
+          "text": "Plan: Implement file watcher using notify crate, re-rendering in-place (clearing screen or moving cursor to top-left) on file modification, and handling Ctrl+C gracefully."
+        },
+        {
+          "at": "2026-10-29T12:30:05Z",
+          "by": "antigravity",
+          "text": "Implemented --watch / -W live watch mode with in-place terminal screen/cursor updating, Kitty image buffer clearing, filesystem event debouncing, and stdin validation."
+        }
+      ]
+    },
+    {
+      "id": "VR-01",
+      "title": "End-to-End Testing & Documentation",
+      "state": "done",
+      "group": "VR",
+      "deps": ["CM-01", "CM-02"],
+      "yolo": true,
+      "at": "2026-10-29T12:22:27Z",
+      "by": "antigravity",
+      "desc": "Create unit and integration test suite with synthetic raster images, test CLI piping and flags, and write README with remote server setup and usage guide.",
+      "notes": [
+        {
+          "at": "2026-10-29T12:30:12Z",
+          "by": "antigravity",
+          "text": "Plan: Create comprehensive integration tests (synthetic image generation for PNG, JPEG, WebP, GIF, stdin piping, CLI flag checks), verify release build, and write comprehensive README documentation."
+        },
+        {
+          "at": "2026-10-29T12:31:54Z",
+          "by": "antigravity",
+          "text": "Completed full test suite and documentation:\n- 13 unit tests covering terminal protocol detection, multiplexer wrapping, size parsing, Kitty chunking, and iTerm2 OSC 1337 generation.\n- 6 integration tests verifying real end-to-end binary execution with synthetic PNG/JPEG images, STDIN piping, multi-image sequences, and quiet mode.\n- Optimized release build verified (target/release/climg, ~2.7 MB standalone static binary).\n- Comprehensive README.md created with compatibility table, remote SSH setup, and usage examples."
+        }
+      ]
+    }
+  ]
+}
