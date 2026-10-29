@@ -42,55 +42,48 @@ When training models on remote machines over SSH, copying plots to your local la
 
 ## Installation
 
-### 1. Install Locally (into `~/.cargo/bin`)
+### 1. One-Line Install (Recommended for Remote Servers)
 
-If you want `climg` available globally on your current machine:
+No Rust, Cargo, or root/sudo access required. On any remote Linux server or local Mac, run:
 
 ```bash
-cargo install --path .
+curl -fsSL https://raw.githubusercontent.com/Jorgvt/climg/master/install.sh | bash
 ```
 
-Ensure `~/.cargo/bin` is in your `PATH` (typically added by Rust installation).
+This automatically detects your OS and architecture, downloads the latest pre-compiled static binary from GitHub Releases, and installs it into `~/.local/bin/climg`.
+
+*(Make sure `~/.local/bin` is in your `$PATH`, e.g. `export PATH="$HOME/.local/bin:$PATH"`)*.
 
 ---
 
-### 2. Install on a Remote Server
+### 2. Direct Release Download
 
-#### Option A: Direct Build on Remote Server (Recommended)
-If Rust / Cargo is installed on the remote machine:
+You can also download pre-built binaries directly from the [GitHub Releases page](https://github.com/Jorgvt/climg/releases):
+
+| Platform | Target | Archive |
+|---|---|---|
+| **Linux (x86_64)** | `x86_64-unknown-linux-musl` | `climg-x86_64-unknown-linux-musl.tar.gz` |
+| **Linux (ARM64)** | `aarch64-unknown-linux-musl` | `climg-aarch64-unknown-linux-musl.tar.gz` |
+| **macOS (Apple Silicon)** | `aarch64-apple-darwin` | `climg-aarch64-apple-darwin.tar.gz` |
+| **macOS (Intel)** | `x86_64-apple-darwin` | `climg-x86_64-apple-darwin.tar.gz` |
+
+To unpack and place into `~/.local/bin`:
+```bash
+curl -fsSL https://github.com/Jorgvt/climg/releases/latest/download/climg-x86_64-unknown-linux-musl.tar.gz | tar -xz -C ~/.local/bin/
+```
+
+---
+
+### 3. Build from Source (with Cargo)
+
+If you have Rust installed locally or on the remote machine:
 
 ```bash
-# Clone and install directly
-git clone https://github.com/your-username/climg.git
-cd climg
 cargo install --path .
 ```
-
-#### Option B: Standalone Binary Transfer (Zero Remote Rust Dependency)
-Since `climg` is a standalone static binary without dynamic C dependencies, you can compile and transfer the binary directly.
-
-**If your remote server matches your build OS:**
+or directly from GitHub:
 ```bash
-cargo build --release
-
-# If you have sudo / root access:
-scp target/release/climg user@remote-server:/usr/local/bin/
-
-# Or without sudo (into user binary directory):
-ssh user@remote-server "mkdir -p ~/.local/bin"
-scp target/release/climg user@remote-server:~/.local/bin/
-```
-
-**If developing on macOS and targeting a remote Linux server (Cross-Compilation):**
-You can use [`cross`](https://github.com/cross-rs/cross) or standard target compilation:
-```bash
-# Build a static Linux binary from macOS
-cross build --target x86_64-unknown-linux-musl --release
-scp target/x86_64-unknown-linux-musl/release/climg user@remote-server:~/.local/bin/
-```
-Make sure `~/.local/bin` is in your remote `$PATH` (e.g., in `~/.bashrc` or `~/.zshrc`):
-```bash
-export PATH="$HOME/.local/bin:$PATH"
+cargo install --git https://github.com/Jorgvt/climg.git
 ```
 
 ---

@@ -17,6 +17,10 @@
     {
       "id": "VR",
       "name": "Verification"
+    },
+    {
+      "id": "DI",
+      "name": "Distribution"
     }
   ],
   "tasks": [
@@ -193,6 +197,27 @@
           "at": "2026-10-29T12:31:54Z",
           "by": "antigravity",
           "text": "Completed full test suite and documentation:\n- 13 unit tests covering terminal protocol detection, multiplexer wrapping, size parsing, Kitty chunking, and iTerm2 OSC 1337 generation.\n- 6 integration tests verifying real end-to-end binary execution with synthetic PNG/JPEG images, STDIN piping, multi-image sequences, and quiet mode.\n- Optimized release build verified (target/release/climg, ~2.7 MB standalone static binary).\n- Comprehensive README.md created with compatibility table, remote SSH setup, and usage examples."
+        }
+      ]
+    },
+    {
+      "id": "DI-01",
+      "title": "Automated GitHub Releases & Installer Script",
+      "state": "review",
+      "group": "DI",
+      "at": "2026-10-29T12:53:04Z",
+      "by": "antigravity",
+      "desc": "Configure GitHub Actions CI/CD to cross-compile static binaries for Linux (x86_64, aarch64) and macOS, provide an install.sh script, and update README instructions.",
+      "notes": [
+        {
+          "at": "2026-10-29T13:59:44Z",
+          "by": "antigravity",
+          "text": "Plan: Create .github/workflows/release.yml with matrix builds (Linux musl and macOS), create install.sh for 1-line installation, and update README.md."
+        },
+        {
+          "at": "2026-10-29T14:00:43Z",
+          "by": "antigravity",
+          "text": "Configured GitHub Actions CI/CD release workflow (.github/workflows/release.yml) targeting x86_64 and aarch64 Linux musl and macOS. Created install.sh script for automated 1-line installation into ~/.local/bin, and updated README with instant zero-dependency install instructions."
         }
       ]
     }
