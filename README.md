@@ -97,6 +97,20 @@ cargo install --git https://github.com/Jorgvt/climg.git
 
 ---
 
+### 4. Updating `climg`
+
+Once `climg` is installed, you can update it to the latest version at any time directly from the CLI:
+
+```bash
+climg --update
+# or short flag:
+climg -u
+```
+
+This checks GitHub Releases for new releases, downloads the appropriate static binary for your OS/architecture, and replaces the binary in-place without touching your configuration.
+
+---
+
 ## Usage
 
 ### 1. View a Single Plot

@@ -72,4 +72,8 @@ pub struct Cli {
     /// Generate a persistent configuration file in ~/.config/climg/config.toml
     #[arg(long = "init-config", value_name = "PROTOCOL", num_args = 0..=1, default_missing_value = "kitty")]
     pub init_config: Option<ProtocolChoice>,
+
+    /// Update climg to the latest release from GitHub
+    #[arg(short = 'u', long = "update")]
+    pub update: bool,
 }

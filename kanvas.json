@@ -262,6 +262,27 @@
           "text": "Added persistent configuration and protocol defaults:\n- Configured CLIMG_PROTOCOL environment variable support in Clap CLI.\n- Implemented AppConfig loader for ~/.config/climg/config.toml (and $XDG_CONFIG_HOME).\n- Added `climg --init-config [kitty|iterm2]` command to generate the configuration file on any machine in one command.\n- Verified precedence: CLI flag > CLIMG_PROTOCOL env var > config.toml > Auto-detect.\n- Added 2 new integration tests and updated documentation in README.md."
         }
       ]
+    },
+    {
+      "id": "DI-02",
+      "title": "Self-Update Command",
+      "state": "done",
+      "group": "DI",
+      "at": "2026-11-01T18:39:03Z",
+      "by": "antigravity",
+      "desc": "Implement  (or ) to check GitHub releases for new versions, download the appropriate static binary for the current OS/architecture, replace the running binary in-place, and report the updated version.",
+      "notes": [
+        {
+          "at": "2026-11-01T18:40:00Z",
+          "by": "antigravity",
+          "text": "Plan: 1) Add self_update module with OS/arch detection and GitHub release asset fetching. 2) Safely replace current_exe in-place with fallback. 3) Add --update flag to Clap CLI. 4) Verify and document in README."
+        },
+        {
+          "at": "2026-11-01T18:41:59Z",
+          "by": "antigravity",
+          "text": "Implemented self-update command (`climg --update` / `climg -u`):\n- Detects host OS and CPU architecture.\n- Fetches latest release tag from GitHub Releases API.\n- Downloads matching pre-compiled release archive and unpacks it.\n- Replaces current executable in-place safely with backup restore fallback.\n- Added unit tests for tag parser and target detection, updated help text, and documented in README.md."
+        }
+      ]
     }
   ]
 }

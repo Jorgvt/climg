@@ -3,6 +3,7 @@ mod config;
 mod image_loader;
 mod protocols;
 mod renderer;
+mod self_update;
 mod terminal;
 mod ui;
 mod watcher;
@@ -12,12 +13,18 @@ use cli::{Cli, ProtocolChoice};
 use config::AppConfig;
 use image_loader::LoadedImage;
 use renderer::{RenderOptions, Renderer};
+use self_update::SelfUpdater;
 use terminal::TerminalInfo;
 use ui::Ui;
 use watcher::LiveWatcher;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
+
+    // Handle --update
+    if args.update {
+        return SelfUpdater::update();
+    }
 
     // Handle --init-config
     if let Some(proto) = args.init_config {
