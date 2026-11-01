@@ -1,7 +1,9 @@
 use clap::{Parser, ValueEnum};
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ProtocolChoice {
     /// Auto-detect terminal graphics protocol (Kitty -> iTerm2)
     Auto,
@@ -42,9 +44,14 @@ pub struct Cli {
     #[arg(long = "max-height", value_name = "HEIGHT")]
     pub max_height: Option<String>,
 
-    /// Explicit graphics protocol override
-    #[arg(short = 'p', long = "protocol", value_enum, default_value_t = ProtocolChoice::Auto)]
-    pub protocol: ProtocolChoice,
+    /// Explicit graphics protocol override (can also be set via CLIMG_PROTOCOL env var)
+    #[arg(
+        short = 'p',
+        long = "protocol",
+        value_enum,
+        env = "CLIMG_PROTOCOL"
+    )]
+    pub protocol: Option<ProtocolChoice>,
 
     /// Suppress filename and image metadata header
     #[arg(short = 'q', long = "quiet")]
@@ -53,4 +60,16 @@ pub struct Cli {
     /// Watch mode: monitor file and re-render in-place when modified
     #[arg(short = 'W', long = "watch")]
     pub watch: bool,
+
+    /// Only display the first frame of animated images (e.g. GIFs)
+    #[arg(long = "static")]
+    pub r#static: bool,
+
+    /// Number of animation loops (0 for infinite loop, default: 0)
+    #[arg(long = "loop", default_value_t = 0)]
+    pub loop_count: u32,
+
+    /// Generate a persistent configuration file in ~/.config/climg/config.toml
+    #[arg(long = "init-config", value_name = "PROTOCOL", num_args = 0..=1, default_missing_value = "kitty")]
+    pub init_config: Option<ProtocolChoice>,
 }

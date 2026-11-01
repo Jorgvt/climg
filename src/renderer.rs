@@ -55,20 +55,33 @@ pub struct RenderOptions {
     pub height: Option<SizeSpec>,
     pub max_width: Option<SizeSpec>,
     pub max_height: Option<SizeSpec>,
+    pub r#static: bool,
+    pub loop_count: u32,
 }
 
 impl RenderOptions {
-    pub fn from_cli(cli: &Cli) -> Result<Self> {
+    pub fn from_cli(cli: &Cli, config: &crate::config::AppConfig) -> Result<Self> {
+        let max_width_str = cli
+            .max_width
+            .as_deref()
+            .or(config.max_width.as_deref());
+        let max_height_str = cli
+            .max_height
+            .as_deref()
+            .or(config.max_height.as_deref());
+
         let width = cli.width.as_deref().map(SizeSpec::parse).transpose()?;
         let height = cli.height.as_deref().map(SizeSpec::parse).transpose()?;
-        let max_width = cli.max_width.as_deref().map(SizeSpec::parse).transpose()?;
-        let max_height = cli.max_height.as_deref().map(SizeSpec::parse).transpose()?;
+        let max_width = max_width_str.map(SizeSpec::parse).transpose()?;
+        let max_height = max_height_str.map(SizeSpec::parse).transpose()?;
 
         Ok(Self {
             width,
             height,
             max_width,
             max_height,
+            r#static: cli.r#static,
+            loop_count: cli.loop_count,
         })
     }
 }
@@ -127,6 +140,21 @@ impl Renderer {
 
         match term_info.protocol {
             GraphicsProtocol::Kitty => {
+                // Check if animated GIF and animation is not disabled
+                if !opts.r#static && img.format == Some(ImageFormat::Gif) {
+                    if let Ok(Some(frames)) = img.extract_animation_frames() {
+                        KittyEncoder::write_animation(
+                            writer,
+                            &frames,
+                            cols,
+                            rows,
+                            opts.loop_count,
+                            wrap_fn,
+                        )?;
+                        return Ok(());
+                    }
+                }
+
                 // If already PNG, send directly; otherwise transcode to PNG in memory
                 let png_bytes = if img.format == Some(ImageFormat::Png) {
                     img.raw_bytes.clone()
@@ -189,6 +217,8 @@ mod tests {
             height: None,
             max_width: None,
             max_height: None,
+            r#static: false,
+            loop_count: 0,
         };
         let (cols, rows) = Renderer::compute_target_dimensions(&opts, 120, 40);
         assert_eq!(cols, Some(120));
@@ -202,6 +232,8 @@ mod tests {
             height: None,
             max_width: None,
             max_height: None,
+            r#static: false,
+            loop_count: 0,
         };
         let (cols, rows) = Renderer::compute_target_dimensions(&opts, 120, 40);
         assert_eq!(cols, Some(60));

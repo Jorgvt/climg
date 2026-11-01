@@ -54,6 +54,15 @@ This automatically detects your OS and architecture, downloads the latest pre-co
 
 *(Make sure `~/.local/bin` is in your `$PATH`, e.g. `export PATH="$HOME/.local/bin:$PATH"`)*.
 
+> **💡 Remote Server Tip (Setting your protocol once):**
+> Because SSH connections often strip terminal environment variables like `KITTY_WINDOW_ID`, initialize your preferred protocol once right after installing:
+> ```bash
+> climg --init-config kitty
+> # or for iTerm2 / VS Code:
+> climg --init-config iterm2
+> ```
+> This creates `~/.config/climg/config.toml` so you can simply run `climg plot.png` without extra flags.
+
 ---
 
 ### 2. Direct Release Download
@@ -134,18 +143,64 @@ climg -w 80 plot.png
 climg --max-height 20 plot.png
 ```
 
-### 6. Quiet Mode (Scripting)
+### 6. Animated GIFs
+`climg` natively supports animated GIFs. For Kitty terminals, it transmits all animation frames with their exact millisecond delays and initiates hardware-accelerated looping handled entirely by the terminal.
+
+```bash
+# Play animated GIF (infinite loop by default)
+climg training_progress.gif
+
+# Limit playback to 3 loops
+climg --loop 3 training_progress.gif
+
+# Only view the first frame as a static image
+climg --static training_progress.gif
+```
+
+### 7. Quiet Mode (Scripting)
 ```bash
 climg --quiet plot.png
 ```
 Suppresses metadata headers and prints only the raw inline graphic sequence.
 
-### 7. Explicit Protocol Override
-If terminal auto-detection fails in a non-standard SSH environment:
+### 8. Configuration & Remote SSH Defaults
+
+When connecting over SSH, remote servers frequently strip terminal environment variables like `KITTY_WINDOW_ID` or `TERM_PROGRAM`. To avoid having to type `--protocol kitty` every time, you can configure your default protocol once using either method:
+
+#### Option A: Generate a Persistent Config File (Recommended)
+Run this command once on your remote server:
 ```bash
-climg --protocol kitty plot.png
-# or
-climg --protocol iterm2 plot.png
+climg --init-config kitty
+```
+This creates `~/.config/climg/config.toml`:
+```toml
+# ~/.config/climg/config.toml
+protocol = "kitty"
+```
+From then on, simply running `climg plot.png` will always use Kitty graphics automatically.
+
+#### Option B: Environment Variable
+Add this to your remote server's `~/.bashrc` or `~/.zshrc`:
+```bash
+export CLIMG_PROTOCOL=kitty
+```
+
+---
+
+## Configuration File Reference
+
+`climg` looks for configuration in `$XDG_CONFIG_HOME/climg/config.toml` or `~/.config/climg/config.toml`:
+
+```toml
+# Default graphics protocol: "kitty", "iterm2", or "auto"
+protocol = "kitty"
+
+# Always suppress filename/metadata banner (default: false)
+quiet = false
+
+# Default maximum width / height constraints
+max_width = "80"
+max_height = "35"
 ```
 
 ---
@@ -159,11 +214,19 @@ Arguments:
   [FILE]...  Image file path(s) to view. If omitted or '-', reads from stdin
 
 Options:
-  -w, --width <WIDTH>        Target display width (cells, '50%', or '800px')
-  -H, --height <HEIGHT>      Target display height (cells, '50%', or '600px')
-      --max-width <WIDTH>    Maximum display width
-      --max-height <HEIGHT>  Maximum display height
-  -p, --protocol <PROTOCOL>  Explicit graphics protocol: [auto, kitty, iterm2] (default: auto)
+  -w, --width <WIDTH>              Target display width (cells, '50%', or '800px')
+  -H, --height <HEIGHT>            Target display height (cells, '50%', or '600px')
+      --max-width <WIDTH>          Maximum display width
+      --max-height <HEIGHT>        Maximum display height
+  -p, --protocol <PROTOCOL>        Explicit graphics protocol: [auto, kitty, iterm2] [env: CLIMG_PROTOCOL=]
+      --init-config [<PROTOCOL>]   Generate persistent config file in ~/.config/climg/config.toml
+  -q, --quiet                      Suppress metadata headers
+  -W, --watch                      Watch mode: monitor file and re-render in-place
+      --static                     Only display first frame of animated GIF
+      --loop <COUNT>               Number of animation loops (0 = infinite)
+  -h, --help                       Print help
+  -V, --version                    Print version
+```
   -q, --quiet                Suppress metadata headers
   -W, --watch                Watch mode: monitor file and re-render in-place
   -h, --help                 Print help

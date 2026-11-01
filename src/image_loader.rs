@@ -1,8 +1,15 @@
 use anyhow::{Context, Result, anyhow};
-use image::{DynamicImage, GenericImageView, ImageFormat};
+use image::codecs::gif::GifDecoder;
+use image::{AnimationDecoder, DynamicImage, GenericImageView, ImageFormat};
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::{self, Cursor, Read};
 use std::path::Path;
+
+#[derive(Debug, Clone)]
+pub struct AnimationFrame {
+    pub png_bytes: Vec<u8>,
+    pub delay_ms: u32,
+}
 
 #[derive(Debug, Clone)]
 pub struct LoadedImage {
@@ -86,6 +93,48 @@ impl LoadedImage {
     pub fn to_dynamic_image(&self) -> Result<DynamicImage> {
         image::load_from_memory(&self.raw_bytes)
             .context("Failed to decode image to DynamicImage")
+    }
+
+    /// Extract animation frames if this image is an animated format (e.g. GIF) with > 1 frames
+    pub fn extract_animation_frames(&self) -> Result<Option<Vec<AnimationFrame>>> {
+        if self.format != Some(ImageFormat::Gif) {
+            return Ok(None);
+        }
+
+        let decoder = match GifDecoder::new(Cursor::new(&self.raw_bytes)) {
+            Ok(d) => d,
+            Err(_) => return Ok(None),
+        };
+
+        let frames = decoder.into_frames().collect_frames()?;
+        if frames.len() <= 1 {
+            return Ok(None);
+        }
+
+        let mut anim_frames = Vec::with_capacity(frames.len());
+        for frame in frames {
+            let delay = frame.delay();
+            let (num, denom) = delay.numer_denom_ms();
+            let delay_ms = if denom > 0 {
+                num / denom
+            } else {
+                num
+            };
+            // Default to at least 10ms if delay is 0
+            let delay_ms = if delay_ms == 0 { 100 } else { delay_ms };
+
+            let buf = frame.into_buffer();
+            let dyn_img = DynamicImage::ImageRgba8(buf);
+            let mut png_bytes = Vec::new();
+            dyn_img.write_to(&mut Cursor::new(&mut png_bytes), ImageFormat::Png)?;
+
+            anim_frames.push(AnimationFrame {
+                png_bytes,
+                delay_ms,
+            });
+        }
+
+        Ok(Some(anim_frames))
     }
 
     /// Human-readable format name

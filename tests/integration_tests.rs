@@ -1,4 +1,6 @@
-use image::{ImageBuffer, ImageFormat, Rgb};
+use image::codecs::gif::GifEncoder;
+use image::{Delay, Frame, ImageBuffer, ImageFormat, Rgb, Rgba};
+use std::fs::File;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
@@ -153,4 +155,108 @@ fn test_cli_multiple_files() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("plot1.png"));
     assert!(stdout.contains("plot2.png"));
+}
+
+fn create_sample_animated_gif(path: &std::path::Path) {
+    let file = File::create(path).unwrap();
+    let mut encoder = GifEncoder::new(file);
+    encoder.set_repeat(image::codecs::gif::Repeat::Infinite).unwrap();
+
+    let frame1_buf: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(30, 30, Rgba([255, 0, 0, 255]));
+    let frame2_buf: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(30, 30, Rgba([0, 255, 0, 255]));
+
+    let frame1 = Frame::from_parts(frame1_buf, 0, 0, Delay::from_numer_denom_ms(100, 1));
+    let frame2 = Frame::from_parts(frame2_buf, 0, 0, Delay::from_numer_denom_ms(150, 1));
+
+    encoder.encode_frame(frame1).unwrap();
+    encoder.encode_frame(frame2).unwrap();
+}
+
+#[test]
+fn test_cli_kitty_animated_gif() {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let gif_path = temp_dir.path().join("anim.gif");
+    create_sample_animated_gif(&gif_path);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_climg"))
+        .arg(&gif_path)
+        .arg("--protocol")
+        .arg("kitty")
+        .output()
+        .expect("Failed to execute climg");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("anim.gif"));
+    assert!(stdout.contains("GIF"));
+    // Frame 1: a=T,i=...,f=100,z=100
+    assert!(stdout.contains("\x1b_Ga=T,i="));
+    assert!(stdout.contains("z=100"));
+    // Frame 2: a=f,i=...,f=100,z=150
+    assert!(stdout.contains("\x1b_Ga=f,i="));
+    assert!(stdout.contains("z=150"));
+    // Playback control: a=a,i=...,s=3
+    assert!(stdout.contains("\x1b_Ga=a,i="));
+    assert!(stdout.contains("s=3"));
+}
+
+#[test]
+fn test_cli_kitty_animated_gif_static_flag() {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let gif_path = temp_dir.path().join("anim_static.gif");
+    create_sample_animated_gif(&gif_path);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_climg"))
+        .arg(&gif_path)
+        .arg("--protocol")
+        .arg("kitty")
+        .arg("--static")
+        .output()
+        .expect("Failed to execute climg");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("anim_static.gif"));
+    // Should NOT contain multi-frame animation commands
+    assert!(!stdout.contains("\x1b_Ga=f,i="));
+    assert!(!stdout.contains("\x1b_Ga=a,i="));
+    // Should contain standard single-frame transmit
+    assert!(stdout.contains("\x1b_Ga=T,f=100"));
+}
+
+#[test]
+fn test_cli_env_var_protocol() {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+    let img_path = temp_dir.path().join("env_test.png");
+    create_sample_png(&img_path, 80, 40);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_climg"))
+        .arg(&img_path)
+        .env("CLIMG_PROTOCOL", "iterm2")
+        .env_remove("KITTY_WINDOW_ID")
+        .env_remove("TERM_PROGRAM")
+        .output()
+        .expect("Failed to execute climg");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\x1b]1337;File="));
+}
+
+#[test]
+fn test_cli_init_config() {
+    let temp_dir = tempfile::TempDir::new().unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_climg"))
+        .arg("--init-config")
+        .arg("kitty")
+        .env("XDG_CONFIG_HOME", temp_dir.path())
+        .output()
+        .expect("Failed to execute climg");
+
+    assert!(output.status.success());
+    let config_file = temp_dir.path().join("climg").join("config.toml");
+    assert!(config_file.exists());
+    let content = std::fs::read_to_string(config_file).unwrap();
+    assert!(content.contains("protocol = \"kitty\""));
 }

@@ -203,7 +203,7 @@
     {
       "id": "DI-01",
       "title": "Automated GitHub Releases & Installer Script",
-      "state": "review",
+      "state": "done",
       "group": "DI",
       "at": "2026-10-29T12:53:04Z",
       "by": "antigravity",
@@ -218,6 +218,48 @@
           "at": "2026-10-29T14:00:43Z",
           "by": "antigravity",
           "text": "Configured GitHub Actions CI/CD release workflow (.github/workflows/release.yml) targeting x86_64 and aarch64 Linux musl and macOS. Created install.sh script for automated 1-line installation into ~/.local/bin, and updated README with instant zero-dependency install instructions."
+        }
+      ]
+    },
+    {
+      "id": "PR-04",
+      "title": "Animated GIF Support for Kitty Protocol",
+      "state": "done",
+      "group": "PR",
+      "at": "2026-11-01T11:01:45Z",
+      "by": "antigravity",
+      "desc": "Decode multi-frame GIFs using image::codecs::gif::GifDecoder, extract frame delays, transmit animation frames using Kitty graphics animation protocol (a=T initial frame with z delay, a=f subsequent frames, s=3 loop animation), and add --static / --loop CLI options.",
+      "notes": [
+        {
+          "at": "2026-11-01T11:02:14Z",
+          "by": "antigravity",
+          "text": "Plan: 1) Add animation frame extraction in image_loader. 2) Implement Kitty animation transmission (a=T with delay, a=f subsequent frames, loop control). 3) Add CLI flags (--static, --loop). 4) Add tests and verify."
+        },
+        {
+          "at": "2026-11-01T11:06:45Z",
+          "by": "antigravity",
+          "text": "Implemented native animated GIF playback for Kitty graphics protocol:\n- Decodes multi-frame GIFs with frame delays using image::codecs::gif::GifDecoder.\n- Transmits frames with Kitty protocol: a=T for root frame (with delay z and size flags), a=f for subsequent frames (with delay z), and a=a (s=3) for terminal-driven animation looping.\n- Added --static (view only first frame) and --loop <N> (control loop count) CLI flags.\n- Added integration tests covering multi-frame GIF transmission and --static flag.\n- Rebuilt release binary and updated README documentation."
+        }
+      ]
+    },
+    {
+      "id": "CM-03",
+      "title": "Persistent Protocol Configuration and Setup Helper",
+      "state": "done",
+      "group": "CM",
+      "at": "2026-11-01T18:18:57Z",
+      "by": "antigravity",
+      "desc": "Support CLIMG_PROTOCOL environment variable, persistent configuration file (~/.config/climg/config.toml), and a command/flag (e.g., climg config --protocol kitty or climg init-config) to generate a default configuration file.",
+      "notes": [
+        {
+          "at": "2026-11-01T18:20:34Z",
+          "by": "antigravity",
+          "text": "Plan: 1) Add serde/toml for config file support. 2) Implement config module (~/.config/climg/config.toml). 3) Add CLIMG_PROTOCOL env var to clap. 4) Add --init-config flag. 5) Add unit/integration tests and update docs."
+        },
+        {
+          "at": "2026-11-01T18:22:55Z",
+          "by": "antigravity",
+          "text": "Added persistent configuration and protocol defaults:\n- Configured CLIMG_PROTOCOL environment variable support in Clap CLI.\n- Implemented AppConfig loader for ~/.config/climg/config.toml (and $XDG_CONFIG_HOME).\n- Added `climg --init-config [kitty|iterm2]` command to generate the configuration file on any machine in one command.\n- Verified precedence: CLI flag > CLIMG_PROTOCOL env var > config.toml > Auto-detect.\n- Added 2 new integration tests and updated documentation in README.md."
         }
       ]
     }
